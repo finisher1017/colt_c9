@@ -9,7 +9,6 @@ var Comment = require("./models/comment");
 var seedDB = require("./seeds");
 
 // seedDB();
-console.log("this is the app file.");
 mongoose.connect("mongodb://localhost/yelp_camp");
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
@@ -93,8 +92,16 @@ app.post("/campgrounds/:id/comments", function(req, res) {
             console.log(err);
             res.redirect("/campgrounds");
         } else {
-            console.log(req.body.comment);
-            res.redirect(`campgrounds/${req.params.id}`);
+            Comment.create(req.body.comment, function(err, comment) {
+                if(err) {
+                    console.log(err);
+                } else {
+                    campground.comments.push(comment);
+                    campground.save();
+                    res.redirect(`/campgrounds/${campground.id}`);
+                }
+            });
+            
         }
     });
     //create new comment
