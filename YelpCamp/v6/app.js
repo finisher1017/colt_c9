@@ -23,7 +23,7 @@ app.use(express.static(__dirname + "/public"));
 app.use(expressSession({
     secret: "megajon",
     resave: false,
-    saveUninitialize: false
+    saveUninitialized: false
 }));
 
 app.use(passport.initialize());
@@ -31,6 +31,11 @@ app.use(passport.session());
 passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
+
+app.use(function(req, res, next) {
+    res.locals.currentUser = req.user;
+    next();
+});
 
 
 //===================
@@ -43,6 +48,7 @@ app.get("/", function(req, res) {
 
 //INDEW - show all campgrounds
 app.get("/campgrounds", function(req, res) {
+    console.log(req.user);
     //Get all campgrounds from DB
     Campground.find({}, function(err, allCampgrounds) {
         if(err) {
@@ -53,6 +59,8 @@ app.get("/campgrounds", function(req, res) {
     });
 });
 
+
+//Campgrounds post router
 app.post("/campgrounds", function(req, res) {
     // get data from form
     var name = req.body.name;
@@ -94,7 +102,8 @@ app.get("/campgrounds/:id", function(req, res) {
 // COMMENTS ROUTES
 // ======================
 
-app.get("/campgrounds/:id/comments/new", function(req, res) {
+//route for campground comments form
+app.get("/campgrounds/:id/comments/new", isLoggedIn, function(req, res) {
     // find campground by id
     Campground.findById(req.params.id, function(err, campground) {
         if(err) {
@@ -106,7 +115,7 @@ app.get("/campgrounds/:id/comments/new", function(req, res) {
 });
 
 //comment POST route
-app.post("/campgrounds/:id/comments", function(req, res) {
+app.post("/campgrounds/:id/comments", isLoggedIn, function(req, res) {
     //lookup campground using ID
     Campground.findById(req.params.id, function(err, campground) {
         if(err) {
@@ -158,7 +167,7 @@ app.post("/register", function(req, res) {
 
 //show login form
 app.get("/login", function(req, res) {
-    res.render("login");
+    res.render("login", {currentUser: req.user});
 });
 
 //handle login
@@ -181,6 +190,22 @@ app.get("/logout", function(req, res) {
     res.redirect("/campgrounds");
 });
 
+//logout route
+app.get("/logout", function(req, res) {
+    req.logout();
+    res.redirect("/campgrounds");
+});
+
+//MIDDLEWARE
+function isLoggedIn(req, res, next){
+    if(req.isAuthenticated()){
+        return next();
+    } else {
+        res.redirect("/login");
+    }
+}
+
+//START SERVER
 app.listen(port, ip, function() {
     console.log(`Server started on port ${port} - IP ${ip}`);
 });
