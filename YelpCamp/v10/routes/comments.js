@@ -28,6 +28,7 @@ router.post("/", middleware.isLoggedIn, function(req, res) {
             //create new comment
             Comment.create(req.body.comment, function(err, comment) {
                 if(err) {
+                    req.flash("error", "Unable to create comment.")
                     console.log(err);
                 } else {
                     //add username and id to comment

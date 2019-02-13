@@ -28,9 +28,11 @@ router.post("/register", function(req, res) {
     User.register(newUser, req.body.password, function(err, user) {
         if(err){
             console.log(err);
+            req.flash("error", err.message);
             return res.render("register");
         } else {
             passport.authenticate("local")(req, res, function(){
+                req.flash("success", `Hello, ${user.username} Welcome to YelpCamp`);
                 res.redirect("/campgrounds");
             });
         }
@@ -40,7 +42,7 @@ router.post("/register", function(req, res) {
 
 //show login form
 router.get("/login", function(req, res) {
-    res.render("login", {currentUser: req.user});
+    res.render("login");
 });
 
 //handle login
@@ -54,30 +56,22 @@ router.post("/login", passport.authenticate("local",
 //logout route
 router.get("/logout", function(req, res) {
     req.logout();
+    req.flash("success", "Logout Completed");
     res.redirect("/campgrounds");
 });
 
-// logic route
-router.get("/logout", function(req, res) {
-    req.logout();
-    res.redirect("/campgrounds");
-});
+// // logic route
+// router.get("/logout", function(req, res) {
+//     req.logout();
+//     res.redirect("/campgrounds");
+// });
 
-//logout route
-router.get("/logout", function(req, res) {
-    req.logout();
-    res.redirect("/campgrounds");
-});
+// //logout route
+// router.get("/logout", function(req, res) {
+//     req.logout();
+//     res.redirect("/campgrounds");
+// });
 
-
-//MIDDLEWARE
-function isLoggedIn(req, res, next){
-    if(req.isAuthenticated()){
-        return next();
-    } else {
-        res.redirect("/login");
-    }
-}
 
 
 module.exports = router;
